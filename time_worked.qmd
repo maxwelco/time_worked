@@ -1,0 +1,27 @@
+---
+title: "time_worked"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(readODS)
+library(ggthemes)
+```
+
+
+```{r}
+read_ods("time.ods") %>% 
+  select(1:4) %>% 
+  janitor::clean_names() %>% 
+  unite("date", 1:3, sep = "-") %>% 
+  mutate(date = as_date(date)) %>% 
+  ggplot(aes(x=date, y=hours)) +
+  geom_col(fill = "#333333") +
+  theme_f
+
+
+ggsave("time_worked.png", width = 12, height = 5)
+```
+
