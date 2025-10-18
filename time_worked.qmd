@@ -8,20 +8,86 @@ editor: visual
 library(tidyverse)
 library(readODS)
 library(ggthemes)
+library(lubridate)
+library(dplyr)
+library(scales)
 ```
-
-
 ```{r}
 read_ods("time.ods") %>% 
   select(1:4) %>% 
   janitor::clean_names() %>% 
   unite("date", 1:3, sep = "-") %>% 
-  mutate(date = as_date(date)) %>% 
-  ggplot(aes(x=date, y=hours)) +
-  geom_col(fill = "#333333") +
-  theme_f
+  mutate(date = as_date(date)) -> worked
+```
+
+```{r}
+# Generate dates for the past year
+end_date <- Sys.Date()
+as.Date("2025-10-06") - as.Date("2025-05-01")
+start_date <- end_date - 158
+dates <- seq(start_date, end_date, by = "day") %>% 
+  as_tibble() %>% 
+  rename(date = value) -> days
+```
+
+```{r}
+days %>% 
+  left_join(worked) %>% 
+  mutate(hours = if_else(is.na(hours), 0, hours)) %>% 
+  mutate(
+    week = isoweek(date),
+    weekday = wday(date, week_start = 1),  # Monday = 1
+    year = year(date),
+    month = month(date, label = TRUE),
+    week_year = paste0(year, "-", week),  # Unique week identifier
+    day = weekdays(date),
+    day_label = factor(weekday, levels = 1:7, labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+  )-> time_worked
+```
+
+
+
+
+```{r}
+time_worked %>% 
+  ggplot(aes(x = week, y = fct_rev(day_label), fill = hours)) +
+  geom_tile(color = "grey90", size = 0.1) +
+  scale_fill_gradient(low = "#eeeeee", high = "#216e39", name = "Hours in a day") +
+  scale_x_continuous(expand = c(0, 0), breaks = pretty_breaks(n = 10)) +
+  labs(
+    title = "Hours worked for Weed Research at Texas A&M University",
+    subtitle = "Total hours worked: 179",
+    x = "Week",
+    y = "Day of Week"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    panel.grid = element_blank(),
+    legend.position = "bottom"
+  )
+
 
 
 ggsave("time_worked.png", width = 12, height = 5)
 ```
+
+
+
+
+
+
+```{r}
+# Simulate contribution counts (0-10 per day)
+set.seed(42)
+contributions <- sample(0:10, length(dates), replace = TRUE)
+
+# Build the data frame
+df <- data.frame(
+  date = dates,
+  count = contributions
+)
+
+```
+
 
