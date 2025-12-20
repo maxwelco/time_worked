@@ -12,6 +12,8 @@ library(lubridate)
 library(dplyr)
 library(scales)
 ```
+
+
 ```{r}
 read_ods("time.ods") %>% 
   select(1:4) %>% 
