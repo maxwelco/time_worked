@@ -71,7 +71,7 @@ time_worked %>%
 
 
 
-ggsave("time_worked.png", width = 12, height = 5)
+ggsave("time_worked.png", width = 15, height = 5)
 ```
 
 
